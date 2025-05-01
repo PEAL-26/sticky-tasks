@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="./assets/css/style.css" />
+  <link rel="shortcut icon" href="favicon.ico" type="image/x-icon" />
+
+  <title>Sticky Tasks</title>
+</head>
+
+<body class="bg-primary">
+  <div class="container">
+    <div class="header">
+      <button class="button w-52" onclick="handleAddListTask()">
+        <i data-lucide="plus"></i>
+      </button>
+      <div class="flex h-full">
+        <button class="button">
+          <i data-lucide="loader"></i>
+        </button>
+        <button class="button">
+          <i data-lucide="settings" class="button-icon"></i>
+        </button>
+      </div>
+    </div>
+    <div class="content">
+      <div class="search-bar">
+        <h1 class="mt-4">Tarefas Autoadesivas</h1>
+
+        <div class="bg-secondary flex">
+          <input placeholder="Pesquisar..." class="px-12 py-8 w-full bg-transparente border-none search" />
+          <Button class="button">
+            <i data-lucide="search" style="width: 16px;"></i>
+          </Button>
+        </div>
+      </div>
+
+      <div class="content-list-container">
+        <div id="content-list-items" data-show="true" class="content-list px-8" style="padding-bottom: 8px;"></div>
+        <div id="content-list-details" data-show="false" class="content-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="./assets/js/lucide.min.js"></script>
+  <script src="./assets/js/jswasm/sqlite3.js"></script>
+  <script src="./assets/js/db/database.js"></script>
+  <script src="./assets/js/icons.js"></script>
+  <script src="./assets/js/script.js"></script>
+</body>
+
+</html>
