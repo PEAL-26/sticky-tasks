@@ -6,7 +6,7 @@ interface Props {
   onPress?(): void;
 }
 
-export function TaskCard(props: Props) {
+export function TaskListItemCard(props: Props) {
   const { onPress } = props;
   return (
     <TouchableOpacity
@@ -17,13 +17,13 @@ export function TaskCard(props: Props) {
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Titulo</Text>
         <TouchableOpacity activeOpacity={0.7}>
-          <EllipsisIcon color={colors.secondary} />
+          <EllipsisIcon size={20} color={colors.secondary} />
         </TouchableOpacity>
       </View>
       <View style={styles.resumeContainer}>
         <View style={styles.resumeListItemsContainer}>
           {Array.from({ length: 3 }).map((_, index) => (
-            <Text style={styles.resumeText} numberOfLines={1}>
+            <Text key={index} style={styles.resumeText} numberOfLines={1}>
               Description
             </Text>
           ))}

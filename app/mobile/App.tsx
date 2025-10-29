@@ -1,5 +1,6 @@
 import { StatusBar } from "expo-status-bar";
 import {
+  Image,
   ScrollView,
   StyleSheet,
   Text,
@@ -15,11 +16,32 @@ import {
 } from "lucide-react-native";
 
 import { colors } from "./styles/colors";
-import { TaskCard } from "./components/task-card";
+import { TaskListItemCard } from "./components/task-list-item-card";
 import { useState } from "react";
 import { Task } from "./components/task";
 
+type TaskStatusTypes = "STATED" | "PENDING" | "DONE";
+
+type TaskType = {
+  id: number;
+  title: string;
+  subtasks: {
+    id: number;
+    title: string;
+    group?: { id: number; name: string };
+    description?: string;
+    responsible?: { id: number; name: string };
+    priority?: 0 | 1 | 2;
+    status?: TaskStatusTypes;
+    createdAt: Date;
+    updatedAt: Date;
+  }[];
+  createdAt: Date;
+  updatedAt: Date;
+};
+
 export default function App() {
+  const [tasks, setTasks] = useState<TaskType[]>([]);
   const [task, setTask] = useState<{ id: number } | null>(null);
 
   const handlePressTask = (id: number) => {
@@ -47,7 +69,21 @@ export default function App() {
       </View>
 
       <View style={styles.searchBarContainer}>
-        <Text style={styles.textTitle}>Tarefas Autoadesivas</Text>
+        <View
+          style={{
+            display: "flex",
+            flexDirection: "row",
+            alignItems: "center",
+            width: "100%",
+            gap: 8,
+          }}
+        >
+          {/* <Image
+            source={require("./assets/icon.png")}
+            style={{ height: 24, width: 24 }}
+          /> */}
+          <Text style={styles.textTitle}>Tarefas Autoadesivas</Text>
+        </View>
         <View style={styles.searchBarInputContainer}>
           <TextInput
             placeholderTextColor={`${colors.gray}50`}
@@ -60,21 +96,24 @@ export default function App() {
         </View>
       </View>
 
-      <ScrollView
-        horizontal={false}
-        showsHorizontalScrollIndicator={false}
-        showsVerticalScrollIndicator={false}
-      >
-        {task === null ? (
+      {task === null ? (
+        <ScrollView
+          horizontal={false}
+          showsHorizontalScrollIndicator={false}
+          showsVerticalScrollIndicator={false}
+        >
           <View style={styles.listItemsContainer}>
             {Array.from({ length: 50 }).map((_, index) => (
-              <TaskCard key={index} onPress={() => handlePressTask(index)} />
+              <TaskListItemCard
+                key={index}
+                onPress={() => handlePressTask(index)}
+              />
             ))}
           </View>
-        ) : (
-          <Task data={task} onBack={handleBackTasksList} />
-        )}
-      </ScrollView>
+        </ScrollView>
+      ) : (
+        <Task data={task} onBack={handleBackTasksList} />
+      )}
 
       <StatusBar style="light" />
     </View>
