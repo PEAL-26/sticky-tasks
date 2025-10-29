@@ -9,7 +9,8 @@ const {
     Loader,
     ArrowLeft,
     ChevronDown,
-    ChevronUp
+    ChevronUp,
+    X
 } = lucide
 
 
@@ -23,7 +24,8 @@ const ICONS = {
     "ellipsis": { Ellipsis },
     "loader": { Loader },
     "chevron-down": { ChevronDown },
-    "chevron-up": { ChevronUp }
+    "chevron-up": { ChevronUp },
+    "x": { X }
 }
 
 function getIcons() {

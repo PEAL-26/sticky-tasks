@@ -7,10 +7,6 @@ window.addEventListener("load", () => {
   listItems()
 });
 
-document.addEventListener("load", () => {
-  alert("")
-})
-
 document.querySelectorAll(".list-card-menu-btn").forEach((menuButton) => {
   menuButton.addEventListener("click", (e) => {
     e.stopPropagation()
@@ -67,6 +63,8 @@ function listCreateIcons() {
     icons.forEach((icon) => {
       const attr = icon.getAttribute("data-lucide");
       const iconElement = getIconByName(attr);
+
+      console.log(iconElement)
       //console.log(iconElement, attr)
 
       //const i = document.createElement('i')
@@ -96,14 +94,12 @@ function renderListItemComponent(list) {
           <div class="list-card mb-8" onclick="handleListDetails(${list.id})">
               <div class="bg-gray flex items-center justify-between" style="height: 28px">
                   <div class="flex items-center h-full">
-                      <span class="bg-gray color-primary px-8 font-bold">${
-                        list.title
-                      }</span>
+                      <span class="bg-gray color-primary px-8 font-bold">${list.title
+    }</span>
                   </div>
                   <div class="flex h-full">
-                      <button data-id="${
-                        list.id
-                      }" class="button-secondary list-card-menu-btn">
+                      <button data-id="${list.id
+    }" class="button-secondary list-card-menu-btn">
                       <i data-lucide="ellipsis"></i>
                       </button>
                   </div>
@@ -111,8 +107,8 @@ function renderListItemComponent(list) {
             
               <div class="flex flex-col gap-2 mt-4 py-4 px-8 relative">
                   ${list.tasks
-                    .map((task) => `<span>${task.description}</span>`)
-                    .join("")}
+      .map((task) => `<span>${task.description}</span>`)
+      .join("")}
               </div>
           </div>`.trim();
 }
@@ -125,9 +121,8 @@ function renderListDetails(data) {
                     <button class="button-secondary h-full" onclick="handleGoBackList()">
                     <i data-lucide="arrow-left"></i>
                     </button>
-                    <input class="w-full bg-transparente border-none input color-primary font-bold text-title" value="${
-                      data?.title || ""
-                    }" placeholder="Sem título" />
+                    <input class="w-full bg-transparente border-none input color-primary font-bold text-title" value="${data?.title || ""
+    }" placeholder="Sem título" />
                 </div>
                 <div class="flex h-full">
                     <button class="button-secondary">
@@ -177,17 +172,14 @@ function renderTaskItem(task) {
                 <button class="button">|</button>
             </div>
             <div class="flex flex-col w-full">
-                <input placeholder="Tarefa" class="bg-primary border-none input color-gray placeholder-gray py-4" value="${
-                  task?.description || ""
-                }" />
+                <input placeholder="Tarefa" class="bg-primary border-none input color-gray placeholder-gray py-4" value="${task?.description || ""
+    }" />
 
                 <div class="flex">
-                    <input placeholder="Responsável" class="bg-primary border-none input color-gray placeholder-gray py-4" value="${
-                      task?.responsible || ""
-                    }"/>
-                    <input placeholder="Prioridade" class="bg-primary border-none input color-gray placeholder-gray py-4" value="${
-                      task?.priority || ""
-                    }"/>
+                    <input placeholder="Responsável" class="bg-primary border-none input color-gray placeholder-gray py-4" value="${task?.responsible || ""
+    }"/>
+                    <input placeholder="Prioridade" class="bg-primary border-none input color-gray placeholder-gray py-4" value="${task?.priority || ""
+    }"/>
                 </div>
             </div>
             <div class="flex items-center">
@@ -199,4 +191,3 @@ function renderTaskItem(task) {
         </div>
     `;
 }
-

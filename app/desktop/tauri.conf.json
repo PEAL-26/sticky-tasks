@@ -4,7 +4,7 @@
   "version": "0.1.0",
   "identifier": "com.tauri.dev",
   "build": {
-    "frontendDist": "..",
+    "frontendDist": "../web",
     "beforeDevCommand": "npm run dev",
     "beforeBuildCommand": "npm run build",
     "devUrl": "http://localhost:8080"
@@ -13,10 +13,13 @@
     "windows": [
       {
         "title": "Sticky Tasks",
-        "width": 800,
+        "width": 322,
         "height": 600,
         "resizable": true,
-        "fullscreen": false
+        "fullscreen": false,
+        "transparent": true,
+        "decorations": false,
+        "minWidth": 322
       }
     ],
     "security": {
