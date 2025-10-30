@@ -2,17 +2,17 @@ function initialize(db) {
   return {
     async create(name) {
       try {
-        db.exec("INSERT INTO groups (name) VALUES (?)", [name]);
+        db.exec("INSERT INTO responsibles (name) VALUES (?)", [name]);
         const row = db.exec("SELECT last_insert_rowid() as id");
         return { id: row[0].values[0][0], name };
       } catch (error) {
-        console.error("Erro ao criar grupo:", error);
+        console.error("Erro ao criar responsável:", error);
         throw error;
       }
     },
     async listAll(filters = {}) {
       try {
-        let query = "SELECT * FROM groups WHERE 1=1";
+        let query = "SELECT * FROM responsibles WHERE 1=1";
         const params = [];
 
         if (filters.name) {
@@ -24,40 +24,40 @@ function initialize(db) {
         if (rows.length === 0) return [];
         return rows[0].values.map((row) => ({ id: row[0], name: row[1] }));
       } catch (error) {
-        console.error("Erro ao listar grupos:", error);
+        console.error("Erro ao listar responsáveis:", error);
         throw error;
       }
     },
     async getById(id) {
       try {
-        const rows = db.exec("SELECT * FROM groups WHERE id = ?", [id]);
+        const rows = db.exec("SELECT * FROM responsibles WHERE id = ?", [id]);
         if (rows.length === 0) return null;
         const row = rows[0].values[0];
         return { id: row[0], name: row[1] };
       } catch (error) {
-        console.error(`Erro ao buscar grupo com id ${id}:`, error);
+        console.error(`Erro ao buscar responsável com id ${id}:`, error);
         throw error;
       }
     },
     async update({ id, name }) {
       try {
-        db.exec("UPDATE groups SET name = ? WHERE id = ?", [name, id]);
+        db.exec("UPDATE responsibles SET name = ? WHERE id = ?", [name, id]);
         return { id, name };
       } catch (error) {
-        console.error(`Erro ao atualizar grupo com id ${id}:`, error);
+        console.error(`Erro ao atualizar responsável com id ${id}:`, error);
         throw error;
       }
     },
     async delete(id) {
       try {
-        db.exec("DELETE FROM groups WHERE id = ?", [id]);
-        return { message: "Grupo deletado com sucesso." };
+        db.exec("DELETE FROM responsibles WHERE id = ?", [id]);
+        return { message: "Responsável deletado com sucesso." };
       } catch (error) {
-        console.error(`Erro ao deletar grupo com id ${id}:`, error);
+        console.error(`Erro ao deletar responsável com id ${id}:`, error);
         throw error;
       }
     },
   };
 }
 
-export const group = initialize;
+export const responsible = initialize;
