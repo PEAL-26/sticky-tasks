@@ -6,16 +6,19 @@ import {
   View,
 } from "react-native";
 import { colors } from "../styles/colors";
-import { useState } from "react";
+import { memo, useMemo, useState } from "react";
 import {
   EllipsisIcon,
   PlusIcon,
   TextAlignJustifyIcon,
   TrashIcon,
 } from "lucide-react-native";
+import { SubtaskListData } from "./types";
+import { destructuredObject } from "../helpers/destructured-object";
 
 interface Props {
   onPress?(): void;
+  data: SubtaskListData;
 }
 
 type PriorityStatusTypes = "MIN" | "NOR" | "MAX";
@@ -28,8 +31,11 @@ const PRIORITY_STATUS: Record<
   MAX: { color: "#E95B69", code: 2 },
 };
 
-export function TaskGroupListItemCard(props: Props) {
+function TaskGroupListItemCardMemo(props: Props) {
   const { onPress } = props;
+  
+  const data = useMemo(() => props.data, [...destructuredObject(props.data)]);
+
   const [priorityStatus, setPriorityStatus] =
     useState<PriorityStatusTypes>("NOR");
 
@@ -61,12 +67,12 @@ export function TaskGroupListItemCard(props: Props) {
         <TextInput
           placeholder="Tarefa"
           numberOfLines={1}
-          placeholderTextColor={colors.secondary}
+          placeholderTextColor={`${colors.gray}90`}
           style={[
             styles.taskInput,
             {
               borderWidth: 1,
-              borderColor: colors.secondary,
+              borderColor: `${colors.gray}90`,
               paddingHorizontal: 4,
               paddingVertical: 2,
             },
@@ -76,7 +82,7 @@ export function TaskGroupListItemCard(props: Props) {
           <TextInput
             placeholder="Responsável"
             numberOfLines={2}
-            placeholderTextColor={`${colors.secondary}`}
+            placeholderTextColor={`${colors.gray}90`}
             style={[styles.taskInput, { flex: 1, color: "#ffffff70" }]}
           />
 
@@ -134,6 +140,8 @@ export function TaskGroupListItemCard(props: Props) {
     </View>
   );
 }
+
+export const TaskGroupListItemCard = memo(TaskGroupListItemCardMemo);
 
 const styles = StyleSheet.create({
   tasksContainer: {

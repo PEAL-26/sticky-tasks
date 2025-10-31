@@ -9,25 +9,59 @@ import {
 import { colors } from "../styles/colors";
 import { ArrowLeftIcon, EllipsisIcon, LoaderIcon } from "lucide-react-native";
 import { TaskGroupItemCard } from "./task-group-item-card";
-
-type TaskData = {
-  id: number;
-};
+import { GroupListData, SubtaskListData, TaskType } from "./types";
+import { useState } from "react";
+import { useDatabase } from "contexts/database";
 
 interface Props {
-  data: TaskData;
+  data: TaskType;
   onBack?(): void;
 }
 
-export function Task(props: Props) {
+export function TaskRegisterComponent(props: Props) {
   const { data, onBack } = props;
+
+  const { db, isLoading } = useDatabase();
+
+  const [title, setTitle] = useState(() => data.title);
+  const [status, setStatus] = useState<{
+    pending: number;
+    done: number;
+    started: number;
+    progress: 0;
+  }>({ pending: 0, done: 0, started: 0, progress: 0 });
+  const [groups, setGroups] = useState<GroupListData[]>(() => {
+    return [{ id: 0, subtasks: [] }];
+  });
+
+  let timeout: NodeJS.Timeout | undefined = undefined;
+  const handleChangeTitle = (text: string) => {
+    if (timeout) clearTimeout(timeout);
+    setTitle(text);
+
+    if (!db || isLoading) return;
+
+    timeout = setTimeout(async () => {
+      await db.tasks.update({
+        id: data.id,
+        title: text,
+        progress: status.progress,
+      });
+    }, 500);
+  };
+
+  const updateStatus = () => {};
+
   return (
     <View style={styles.container}>
+      {/* HEADER */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.headerButtons} onPress={onBack}>
           <ArrowLeftIcon size={16} />
         </TouchableOpacity>
         <TextInput
+          value={title}
+          onChangeText={(text) => handleChangeTitle(text)}
           placeholder="Sem título"
           placeholderTextColor={`${colors.primary}`}
           style={styles.titleInput}
@@ -40,29 +74,32 @@ export function Task(props: Props) {
         </View>
       </View>
 
+      {/* GROUP TASKS */}
       <ScrollView
         horizontal={false}
         showsHorizontalScrollIndicator={false}
         showsVerticalScrollIndicator={false}
       >
         <View>
-          {Array.from({ length: 2 }).map((_, index) => (
-            <TaskGroupItemCard key={index} />
+          {groups.map((group, index) => (
+            <TaskGroupItemCard key={index} data={group} />
           ))}
         </View>
       </ScrollView>
+
+      {/* FOOTER */}
       <View style={styles.footerContainer}>
         <Text style={styles.footerText}>
-          1 Em Execução {" | "}
+          {status.started} Em Execução {" | "}
           <Text style={[styles.footerText, { color: "#FED700" }]}>
-            10 Pendents
+            {status.pending} Pendentes
           </Text>
           {" | "}
           <Text style={[styles.footerText, { color: "#48D85F" }]}>
-            0 concluídas
+            {status.done} concluídas
           </Text>
         </Text>
-        <Text style={styles.footerText}>10%</Text>
+        <Text style={styles.footerText}>{status.progress}%</Text>
       </View>
     </View>
   );

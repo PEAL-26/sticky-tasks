@@ -1,11 +1,12 @@
 import { StatusBar } from "expo-status-bar";
 import {
-  Image,
+  RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
+  useWindowDimensions,
   View,
 } from "react-native";
 import {
@@ -15,77 +16,106 @@ import {
   SearchIcon,
 } from "lucide-react-native";
 import { useEffect, useState } from "react";
+
 import { colors } from "../styles/colors";
-import { TaskListItemCard } from "./task-list-item-card";
-import { Task } from "./task";
 import { useDatabase } from "../contexts/database";
 
-type TaskStatusTypes = "STATED" | "PENDING" | "DONE";
-
-type TaskType = {
-  id: number;
-  title: string;
-  progress: number; // 0-100
-  subtasks: {
-    id: number;
-    description: string;
-    group?: { id: number; name: string };
-    note?: string;
-    responsible?: { id: number; name: string };
-    priority?: 0 | 1 | 2;
-    status?: TaskStatusTypes;
-    createdAt: Date;
-    updatedAt: Date;
-  }[];
-  createdAt: Date;
-  updatedAt: Date;
-};
+import { TaskRegisterComponent } from "./task";
+import { TaskListData, TaskType } from "./types";
+import { TaskListItemCard } from "./task-list-item-card";
 
 export function MainApp() {
-  const [tasks, setTasks] = useState<TaskType[]>([]);
-  const [task, setTask] = useState<{ id: number } | null>(null);
+  const dimensions = useWindowDimensions();
+
+  const [tasks, setTasks] = useState<TaskListData[]>([]);
+  const [task, setTask] = useState<TaskType | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
 
   const { db, isLoading } = useDatabase();
 
-  const handlePressTask = (id: number) => {
-    setTask({ id });
+  const handlePressTask = async (id: number) => {
+    if (!db || refreshing || isLoading) return;
+
+    // Fazer essa busca dentro do component para alterar as tarefas
+    try {
+      setRefreshing(true);
+      const task = await db.tasks.getById(id);
+      setTask(task);
+    } catch (error) {
+    } finally {
+      setRefreshing(false);
+    }
   };
 
-  const handleBackTasksList = () => {
+  const handleBackTasksList = async () => {
+    if (refreshing) return;
+
     setTask(null);
+    await loadingTasks();
+  };
+
+  const handleRefresh = async () => {
+    if (refreshing) return;
+
+    setRefreshing(true);
+
+    if (!db || isLoading) {
+      setRefreshing(false);
+      return;
+    }
+
+    await loadingTasks();
+
+    setRefreshing(false);
+  };
+
+  const handleCreateTask = async () => {
+    if (!db || refreshing) return;
+    try {
+      setRefreshing(true);
+      const taskCreated = await db.tasks.create({
+        title: "",
+        progress: 0,
+      });
+
+      const task = await db.tasks.getById(taskCreated.id);
+      setTask(task);
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
+  const loadingTasks = async () => {
+    if (!db || refreshing) return;
+
+    try {
+      setRefreshing(true);
+      const result = await db.tasks.listAll();
+      setTasks(result);
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setRefreshing(false);
+    }
   };
 
   useEffect(() => {
-    (async () => {
-      if (!db || isLoading) return;
-      console.log(
-        "====================================================================================="
-      );
-      await db.groups.create(`Trabalho ${Math.floor(Math.random() * 1000)}`);
-      let result = await db.groups.listAll();
-      await db.groups.update({
-        id: 1,
-        name: `Trabalho Atualizado ${Math.floor(Math.random() * 1000)}`,
-      });
-      const first = await db.groups.getById(result[0].id);
-      await db.groups.delete(result[0].id);
-      result = await db.groups.listAll();
+    if (isLoading) return;
 
-      console.log(
-        "FIRST",
-        first ? JSON.stringify(first, null, 1) : null,
-        first
-      );
-      console.log("LIST", JSON.stringify(result, null, 1));
-    })();
+    loadingTasks();
   }, [isLoading]);
 
-  console.log({ isLoading });
-
+  const showStateComponent = !isLoading || !refreshing;
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity activeOpacity={0.7} style={styles.button}>
+        <TouchableOpacity
+          activeOpacity={0.7}
+          style={styles.button}
+          onPress={handleCreateTask}
+        >
           <PlusIcon color={`${colors.gray}50`} />
         </TouchableOpacity>
         <View style={styles.headerContainerButton}>
@@ -125,26 +155,47 @@ export function MainApp() {
           </TouchableOpacity>
         </View>
       </View>
-
       {task === null ? (
         <ScrollView
           horizontal={false}
           showsHorizontalScrollIndicator={false}
           showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={handleRefresh}
+              colors={[colors.gray]}
+            />
+          }
         >
-          <View style={styles.listItemsContainer}>
-            {Array.from({ length: 50 }).map((_, index) => (
-              <TaskListItemCard
-                key={index}
-                onPress={() => handlePressTask(index)}
-              />
-            ))}
-          </View>
+          {tasks.length ? (
+            <View style={styles.listItemsContainer}>
+              {tasks.map((task, index) => (
+                <TaskListItemCard
+                  key={index}
+                  data={task}
+                  onPress={() => handlePressTask(task.id)}
+                />
+              ))}
+            </View>
+          ) : showStateComponent ? (
+            <View
+              style={[
+                styles.stateContainer,
+                { height: dimensions.height - 140 },
+              ]}
+            >
+              <Text
+                style={{ color: "#fff", textAlign: "center", marginTop: 32 }}
+              >
+                Nenhuma tarefa encontrada.
+              </Text>
+            </View>
+          ) : null}
         </ScrollView>
       ) : (
-        <Task data={task} onBack={handleBackTasksList} />
+        <TaskRegisterComponent data={task} onBack={handleBackTasksList} />
       )}
-
       <StatusBar style="light" />
     </View>
   );
@@ -157,6 +208,14 @@ const styles = StyleSheet.create({
     display: "flex",
     flexDirection: "column",
     paddingTop: 48,
+  },
+  stateContainer: {
+    flex: 1,
+    display: "flex",
+    flexDirection: "column",
+    justifyContent: "center",
+    alignItems: "center",
+    height: "100%",
   },
   header: {
     width: "100%",

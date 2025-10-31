@@ -2,9 +2,10 @@ function initialize(db) {
   return {
     async create(name) {
       try {
-        await db.exec("INSERT INTO responsibles (name) VALUES (?)", [name]);
-        const row = await db.exec("SELECT last_insert_rowid() as id");
-        return { id: row[0].values[0][0], name };
+        const result = await db.exec("INSERT INTO responsibles (name) VALUES (?)", [
+          name,
+        ]);
+        return { id: result.lastID, name };
       } catch (error) {
         console.error("Erro ao criar responsável:", error);
         throw error;
@@ -20,9 +21,8 @@ function initialize(db) {
           params.push(`%${filters.name}%`);
         }
 
-        const rows = await db.exec(query, params);
-        if (rows.length === 0) return [];
-        return rows[0].values.map((row) => ({ id: row[0], name: row[1] }));
+        const rows = await db.getAll(query, params);
+        return rows;
       } catch (error) {
         console.error("Erro ao listar responsáveis:", error);
         throw error;
@@ -30,12 +30,10 @@ function initialize(db) {
     },
     async getById(id) {
       try {
-        const rows = await db.exec("SELECT * FROM responsibles WHERE id = ?", [
+        const row = await db.getFirst("SELECT * FROM responsibles WHERE id = ?", [
           id,
         ]);
-        if (rows.length === 0) return null;
-        const row = rows[0].values[0];
-        return { id: row[0], name: row[1] };
+        return row;
       } catch (error) {
         console.error(`Erro ao buscar responsável com id ${id}:`, error);
         throw error;

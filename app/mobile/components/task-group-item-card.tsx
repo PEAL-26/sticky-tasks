@@ -1,20 +1,28 @@
-import { ChevronDownIcon, EllipsisIcon, PlusIcon } from "lucide-react-native";
-import {
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { EllipsisIcon, PlusCircleIcon } from "lucide-react-native";
+import { StyleSheet, TextInput, TouchableOpacity, View } from "react-native";
+import { memo, useMemo, useState } from "react";
+
 import { colors } from "../styles/colors";
+import { GroupListData, SubtaskListData } from "./types";
 import { TaskGroupListItemCard } from "./task-group-list-item-card";
+import { destructuredObject } from "../helpers/destructured-object";
 
 interface Props {
   onPress?(): void;
+  data: GroupListData;
 }
 
-export function TaskGroupItemCard(props: Props) {
+export function TaskGroupItemCardMemo(props: Props) {
   const { onPress } = props;
+
+  const data = useMemo(() => props.data, [...destructuredObject(props.data)]);
+
+  const [subtasks, setSubtasks] = useState<SubtaskListData[]>(() => {
+    if (data.subtasks.length === 0) {
+      return [{ description: "", priority: 1, status: "PENDING" }];
+    }
+    return data.subtasks;
+  });
   return (
     <View style={styles.container}>
       <View style={styles.groupContainer}>
@@ -35,12 +43,20 @@ export function TaskGroupItemCard(props: Props) {
         </View>
       </View>
 
-      {Array.from({ length: 5 }).map((_, index) => (
-        <TaskGroupListItemCard key={index} />
+      {subtasks.map((subtask, index) => (
+        <TaskGroupListItemCard key={index} data={subtask} />
       ))}
+
+      <View style={styles.footer}>
+        <TouchableOpacity activeOpacity={0.7}>
+          <PlusCircleIcon color={colors.gray} />
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }
+
+export const TaskGroupItemCard = memo(TaskGroupItemCardMemo);
 
 const styles = StyleSheet.create({
   container: {
@@ -49,6 +65,12 @@ const styles = StyleSheet.create({
     display: "flex",
     flexDirection: "column",
     marginTop: 20,
+  },
+  footer: {
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    paddingVertical: 12,
   },
   divider: {
     flex: 1,

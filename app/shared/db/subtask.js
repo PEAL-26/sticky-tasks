@@ -1,4 +1,14 @@
 function initialize(db) {
+  const getById = async (id) => {
+    try {
+      const row = await db.getFirst("SELECT * FROM subtasks WHERE id = ?", [id]);
+      return row;
+    } catch (error) {
+      console.error(`Erro ao buscar subtask com id ${id}:`, error);
+      throw error;
+    }
+  };
+
   return {
     async create(subtaskData) {
       const {
@@ -11,7 +21,7 @@ function initialize(db) {
         status,
       } = subtaskData;
       try {
-        await db.exec(
+        const result = await db.exec(
           "INSERT INTO subtasks (task_id, description, group_id, note, responsible_id, priority, status) VALUES (?, ?, ?, ?, ?, ?, ?)",
           [
             task_id,
@@ -23,9 +33,7 @@ function initialize(db) {
             status,
           ]
         );
-        const row = await db.exec("SELECT last_insert_rowid() as id");
-        const id = row[0].values[0][0];
-        return getById(id);
+        return await getById(result.lastID);
       } catch (error) {
         console.error("Erro ao criar subtask:", error);
         throw error;
@@ -46,20 +54,8 @@ function initialize(db) {
           params.push(filters.status);
         }
 
-        const rows = await db.exec(query, params);
-        if (rows.length === 0) return [];
-        return rows[0].values.map((row) => ({
-          id: row[0],
-          task_id: row[1],
-          description: row[2],
-          group_id: row[3],
-          note: row[4],
-          responsible_id: row[5],
-          priority: row[6],
-          status: row[7],
-          createdAt: row[8],
-          updatedAt: row[9],
-        }));
+        const rows = await db.getAll(query, params);
+        return rows;
       } catch (error) {
         console.error(
           `Erro ao listar subtasks para a tarefa ${task_id}:`,
@@ -69,26 +65,7 @@ function initialize(db) {
       }
     },
     async getById(id) {
-      try {
-        const rows = await db.exec("SELECT * FROM subtasks WHERE id = ?", [id]);
-        if (rows.length === 0) return null;
-        const row = rows[0].values[0];
-        return {
-          id: row[0],
-          task_id: row[1],
-          description: row[2],
-          group_id: row[3],
-          note: row[4],
-          responsible_id: row[5],
-          priority: row[6],
-          status: row[7],
-          createdAt: row[8],
-          updatedAt: row[9],
-        };
-      } catch (error) {
-        console.error(`Erro ao buscar subtask com id ${id}:`, error);
-        throw error;
-      }
+      return await getById(id);
     },
     async update(id, subtaskData) {
       const { description, group_id, note, responsible_id, priority, status } =
@@ -98,7 +75,7 @@ function initialize(db) {
           "UPDATE subtasks SET description = ?, group_id = ?, note = ?, responsible_id = ?, priority = ?, status = ? WHERE id = ?",
           [description, group_id, note, responsible_id, priority, status, id]
         );
-        return getById(id);
+        return await getById(id);
       } catch (error) {
         console.error(`Erro ao atualizar subtask com id ${id}:`, error);
         throw error;

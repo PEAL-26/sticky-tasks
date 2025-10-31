@@ -1,4 +1,41 @@
 function initialize(db) {
+  const getById = async (id) => {
+    try {
+      const task = await db.getFirst("SELECT * FROM tasks WHERE id = ?", [id]);
+      if (!task) return null;
+
+      const subtasks = await db.getAll(
+        `SELECT 
+          s.id, s.description, s.note, s.priority, s.status, s.created_at, s.updated_at,
+          g.id as group_id, g.name as group_name,
+          r.id as responsible_id, r.name as responsible_name
+        FROM subtasks s
+        LEFT JOIN groups g ON s.group_id = g.id
+        LEFT JOIN responsibles r ON s.responsible_id = r.id
+        WHERE s.task_id = ?`,
+        [id]
+      );
+
+      return {
+        ...task,
+        subtasks: subtasks.map((row) => ({
+          id: row.id,
+          description: row.description,
+          note: row.note,
+          priority: row.priority,
+          status: row.status,
+          createdAt: row.created_at,
+          updatedAt: row.updated_at,
+          group: row.group_id ? { id: row.group_id, name: row.group_name } : undefined,
+          responsible: row.responsible_id ? { id: row.responsible_id, name: row.responsible_name } : undefined,
+        })),
+      };
+    } catch (error) {
+      console.error(`Erro ao buscar tarefa com id ${id}:`, error);
+      throw error;
+    }
+  };
+
   return {
     async listAll(filters = {}) {
       try {
@@ -23,6 +60,7 @@ function initialize(db) {
           s.note LIKE ? OR
           g.name LIKE ? OR
           r.name LIKE ?
+        ORDER BY t.updated_at DESC
       `;
           const searchTerm = `%${filters.search}%`;
           params.push(
@@ -41,100 +79,46 @@ function initialize(db) {
           t.updated_at,
           (SELECT COUNT(id) FROM subtasks WHERE task_id = t.id) as total_subtasks
         FROM tasks t
+        ORDER BY t.updated_at DESC
       `;
         }
 
-        const tasksResult = await db.exec(tasksQuery, params);
-console.log(tasksResult);
-
-
-        if (tasksResult.length === 0) return [];
-
-        const tasks = tasksResult[0].values.map((row) => ({
-          id: row[0],
-          title: row[1],
-          progress: row[2],
-          updatedAt: row[3],
-          total_subtasks: row[4],
-          subtasks: [],
-        }));
+        const tasks = await db.getAll(tasksQuery, params);
 
         for (let i = 0; i < tasks.length; i++) {
-          const subtasksQuery = `
-        SELECT id, description FROM subtasks WHERE task_id = ? LIMIT 3
-      `;
-          const subtasksResult = await db.exec(subtasksQuery, [tasks[i].id]);
-          if (subtasksResult.length > 0) {
-            tasks[i].subtasks = subtasksResult[0].values.map((row) => ({
-              id: row[0],
-              description: row[1],
-            }));
-          }
+          const subtasks = await db.getAll(
+            "SELECT id, description FROM subtasks WHERE task_id = ? LIMIT 3",
+            [tasks[i].id]
+          );
+          tasks[i].subtasks = subtasks.map((row) => ({
+            id: row.id,
+            description: row.description,
+          }));
         }
 
-        return tasks;
+        return tasks.map((task) => ({
+          id: task.id,
+          title: task.title,
+          progress: task.progress,
+          updatedAt: task.updated_at,
+          totalSubtasks: task.total_subtasks,
+          subtasks: task.subtasks || [],
+        }));
       } catch (error) {
         console.error("Erro ao listar tarefas:", error);
         throw error;
       }
     },
     async getById(id) {
-      try {
-        const taskResult = await db.exec("SELECT * FROM tasks WHERE id = ?", [
-          id,
-        ]);
-        if (taskResult.length === 0) return null;
-        const taskRow = taskResult[0].values[0];
-        const task = {
-          id: taskRow[0],
-          title: taskRow[1],
-          progress: taskRow[2],
-          createdAt: taskRow[3],
-          updatedAt: taskRow[4],
-          subtasks: [],
-        };
-
-        const subtasksQuery = `
-      SELECT 
-        s.id, s.description, s.note, s.priority, s.status, s.created_at, s.updated_at,
-        g.id as group_id, g.name as group_name,
-        r.id as responsible_id, r.name as responsible_name
-      FROM subtasks s
-      LEFT JOIN groups g ON s.group_id = g.id
-      LEFT JOIN responsibles r ON s.responsible_id = r.id
-      WHERE s.task_id = ?
-    `;
-        const subtasksResult = await db.exec(subtasksQuery, [id]);
-
-        if (subtasksResult.length > 0) {
-          task.subtasks = subtasksResult[0].values.map((row) => ({
-            id: row[0],
-            description: row[1],
-            note: row[2],
-            priority: row[3],
-            status: row[4],
-            createdAt: row[5],
-            updatedAt: row[6],
-            group: row[7] ? { id: row[7], name: row[8] } : undefined,
-            responsible: row[9] ? { id: row[9], name: row[10] } : undefined,
-          }));
-        }
-
-        return task;
-      } catch (error) {
-        console.error(`Erro ao buscar tarefa com id ${id}:`, error);
-        throw error;
-      }
+      return await getById(id);
     },
     async create({ title, progress = 0 }) {
       try {
-        await db.exec("INSERT INTO tasks (title, progress) VALUES (?, ?)", [
+        const result = await db.exec("INSERT INTO tasks (title, progress) VALUES (?, ?)", [
           title,
           progress,
         ]);
-        const row = await db.exec("SELECT last_insert_rowid() as id");
-        const id = row[0].values[0][0];
-        return getById(id);
+        return await getById(result.lastID);
       } catch (error) {
         console.error("Erro ao criar tarefa:", error);
         throw error;
@@ -147,7 +131,7 @@ console.log(tasksResult);
           progress,
           id,
         ]);
-        return getById(id);
+        return await getById(id);
       } catch (error) {
         console.error(`Erro ao atualizar tarefa com id ${id}:`, error);
         throw error;

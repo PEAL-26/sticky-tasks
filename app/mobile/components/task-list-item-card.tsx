@@ -1,13 +1,20 @@
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { colors } from "../styles/colors";
+import { memo, useMemo } from "react";
 import { EllipsisIcon } from "lucide-react-native";
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+
+import { TaskListData } from "./types";
+import { colors } from "../styles/colors";
+import { destructuredObject } from "../helpers/destructured-object";
 
 interface Props {
   onPress?(): void;
+  data: TaskListData;
 }
 
-export function TaskListItemCard(props: Props) {
+function TaskListItemCardMemo(props: Props) {
   const { onPress } = props;
+  const data = useMemo(() => props.data, [...destructuredObject(props.data)]);
+
   return (
     <TouchableOpacity
       activeOpacity={0.7}
@@ -15,28 +22,40 @@ export function TaskListItemCard(props: Props) {
       onPress={onPress}
     >
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Titulo</Text>
+        <Text style={styles.headerTitle} numberOfLines={1}>
+          {data.title || "Sem Título"}
+        </Text>
         <TouchableOpacity activeOpacity={0.7}>
           <EllipsisIcon size={20} color={colors.secondary} />
         </TouchableOpacity>
       </View>
       <View style={styles.resumeContainer}>
         <View style={styles.resumeListItemsContainer}>
-          {Array.from({ length: 3 }).map((_, index) => (
+          {data.subtasks.map((sub, index) => (
             <Text key={index} style={styles.resumeText} numberOfLines={1}>
-              Description
+              {sub.description}
             </Text>
           ))}
         </View>
 
         <View style={styles.resumeFooter}>
-          <Text style={styles.resumeFooterText}>Tarefas: 12</Text>
-          <Text style={styles.resumeFooterText}>29 de Outubro de 2025</Text>
+          <Text style={styles.resumeFooterText}>
+            Tarefas: {data.totalSubtasks}
+          </Text>
+          <Text style={styles.resumeFooterText}>
+            {new Date(data.updatedAt).toLocaleDateString("pt-AO", {
+              day: "2-digit",
+              month: "long",
+              year: "numeric",
+            })}
+          </Text>
         </View>
       </View>
     </TouchableOpacity>
   );
 }
+
+export const TaskListItemCard = memo(TaskListItemCardMemo);
 
 const styles = StyleSheet.create({
   container: {
@@ -78,7 +97,7 @@ const styles = StyleSheet.create({
     paddingBottom: 4,
   },
   resumeFooterText: {
-    color: `${colors.gray}70`,
+    color: colors.gray,
     fontSize: 9,
   },
 });
