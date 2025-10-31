@@ -2,9 +2,10 @@ function initialize(db) {
   return {
     async create(name) {
       try {
-        db.exec("INSERT INTO groups (name) VALUES (?)", [name]);
-        const row = db.exec("SELECT last_insert_rowid() as id");
-        return { id: row[0].values[0][0], name };
+        const result = await db.exec("INSERT INTO groups (name) VALUES (?)", [
+          name,
+        ]);
+        return { id: result.lastID, name };
       } catch (error) {
         console.error("Erro ao criar grupo:", error);
         throw error;
@@ -20,9 +21,8 @@ function initialize(db) {
           params.push(`%${filters.name}%`);
         }
 
-        const rows = db.exec(query, params);
-        if (rows.length === 0) return [];
-        return rows[0].values.map((row) => ({ id: row[0], name: row[1] }));
+        const rows = await db.getAll(query, params);
+        return rows;
       } catch (error) {
         console.error("Erro ao listar grupos:", error);
         throw error;
@@ -30,10 +30,10 @@ function initialize(db) {
     },
     async getById(id) {
       try {
-        const rows = db.exec("SELECT * FROM groups WHERE id = ?", [id]);
-        if (rows.length === 0) return null;
-        const row = rows[0].values[0];
-        return { id: row[0], name: row[1] };
+        const row = await db.getFirst("SELECT * FROM groups WHERE id = ?", [
+          id,
+        ]);
+        return row;
       } catch (error) {
         console.error(`Erro ao buscar grupo com id ${id}:`, error);
         throw error;
@@ -41,7 +41,7 @@ function initialize(db) {
     },
     async update({ id, name }) {
       try {
-        db.exec("UPDATE groups SET name = ? WHERE id = ?", [name, id]);
+        await db.exec("UPDATE groups SET name = ? WHERE id = ?", [name, id]);
         return { id, name };
       } catch (error) {
         console.error(`Erro ao atualizar grupo com id ${id}:`, error);
@@ -50,7 +50,7 @@ function initialize(db) {
     },
     async delete(id) {
       try {
-        db.exec("DELETE FROM groups WHERE id = ?", [id]);
+        await db.exec("DELETE FROM groups WHERE id = ?", [id]);
         return { message: "Grupo deletado com sucesso." };
       } catch (error) {
         console.error(`Erro ao deletar grupo com id ${id}:`, error);

@@ -11,7 +11,7 @@ function initialize(db) {
         status,
       } = subtaskData;
       try {
-        db.exec(
+        await db.exec(
           "INSERT INTO subtasks (task_id, description, group_id, note, responsible_id, priority, status) VALUES (?, ?, ?, ?, ?, ?, ?)",
           [
             task_id,
@@ -23,7 +23,7 @@ function initialize(db) {
             status,
           ]
         );
-        const row = db.exec("SELECT last_insert_rowid() as id");
+        const row = await db.exec("SELECT last_insert_rowid() as id");
         const id = row[0].values[0][0];
         return getById(id);
       } catch (error) {
@@ -46,7 +46,7 @@ function initialize(db) {
           params.push(filters.status);
         }
 
-        const rows = db.exec(query, params);
+        const rows = await db.exec(query, params);
         if (rows.length === 0) return [];
         return rows[0].values.map((row) => ({
           id: row[0],
@@ -70,7 +70,7 @@ function initialize(db) {
     },
     async getById(id) {
       try {
-        const rows = db.exec("SELECT * FROM subtasks WHERE id = ?", [id]);
+        const rows = await db.exec("SELECT * FROM subtasks WHERE id = ?", [id]);
         if (rows.length === 0) return null;
         const row = rows[0].values[0];
         return {
@@ -94,7 +94,7 @@ function initialize(db) {
       const { description, group_id, note, responsible_id, priority, status } =
         subtaskData;
       try {
-        db.exec(
+        await db.exec(
           "UPDATE subtasks SET description = ?, group_id = ?, note = ?, responsible_id = ?, priority = ?, status = ? WHERE id = ?",
           [description, group_id, note, responsible_id, priority, status, id]
         );
@@ -106,7 +106,7 @@ function initialize(db) {
     },
     async delete(id) {
       try {
-        db.exec("DELETE FROM subtasks WHERE id = ?", [id]);
+        await db.exec("DELETE FROM subtasks WHERE id = ?", [id]);
         return { message: "Subtask deletada com sucesso." };
       } catch (error) {
         console.error(`Erro ao deletar subtask com id ${id}:`, error);

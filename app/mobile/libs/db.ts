@@ -1,11 +1,13 @@
 import { type SQLiteDatabase } from "expo-sqlite";
 //import { initializeDatabase, database } from "@shared/db/connection";
-import { initializeDatabase, database } from "../../shared/db/connection";
+import { initializeDatabase, database } from "@shared/db/connection";
+import { ExpoSqliteAdapter } from "@shared/adapters/expo-sqlite";
 
 export const DATABASE_NAME = "sticky_tasks_db";
 
 function adapter(_db: SQLiteDatabase) {
-  return _db;
+  const db = new ExpoSqliteAdapter(_db);
+  return db;
 }
 
 export async function migrateDb(_db: SQLiteDatabase) {

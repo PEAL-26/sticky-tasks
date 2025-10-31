@@ -44,7 +44,9 @@ function initialize(db) {
       `;
         }
 
-        const tasksResult = db.exec(tasksQuery, params);
+        const tasksResult = await db.exec(tasksQuery, params);
+console.log(tasksResult);
+
 
         if (tasksResult.length === 0) return [];
 
@@ -61,7 +63,7 @@ function initialize(db) {
           const subtasksQuery = `
         SELECT id, description FROM subtasks WHERE task_id = ? LIMIT 3
       `;
-          const subtasksResult = db.exec(subtasksQuery, [tasks[i].id]);
+          const subtasksResult = await db.exec(subtasksQuery, [tasks[i].id]);
           if (subtasksResult.length > 0) {
             tasks[i].subtasks = subtasksResult[0].values.map((row) => ({
               id: row[0],
@@ -78,7 +80,9 @@ function initialize(db) {
     },
     async getById(id) {
       try {
-        const taskResult = db.exec("SELECT * FROM tasks WHERE id = ?", [id]);
+        const taskResult = await db.exec("SELECT * FROM tasks WHERE id = ?", [
+          id,
+        ]);
         if (taskResult.length === 0) return null;
         const taskRow = taskResult[0].values[0];
         const task = {
@@ -100,7 +104,7 @@ function initialize(db) {
       LEFT JOIN responsibles r ON s.responsible_id = r.id
       WHERE s.task_id = ?
     `;
-        const subtasksResult = db.exec(subtasksQuery, [id]);
+        const subtasksResult = await db.exec(subtasksQuery, [id]);
 
         if (subtasksResult.length > 0) {
           task.subtasks = subtasksResult[0].values.map((row) => ({
@@ -124,11 +128,11 @@ function initialize(db) {
     },
     async create({ title, progress = 0 }) {
       try {
-        db.exec("INSERT INTO tasks (title, progress) VALUES (?, ?)", [
+        await db.exec("INSERT INTO tasks (title, progress) VALUES (?, ?)", [
           title,
           progress,
         ]);
-        const row = db.exec("SELECT last_insert_rowid() as id");
+        const row = await db.exec("SELECT last_insert_rowid() as id");
         const id = row[0].values[0][0];
         return getById(id);
       } catch (error) {
@@ -138,7 +142,7 @@ function initialize(db) {
     },
     async update({ id, title, progress }) {
       try {
-        db.exec("UPDATE tasks SET title = ?, progress = ? WHERE id = ?", [
+        await db.exec("UPDATE tasks SET title = ?, progress = ? WHERE id = ?", [
           title,
           progress,
           id,
@@ -151,7 +155,7 @@ function initialize(db) {
     },
     async delete(id) {
       try {
-        db.exec("DELETE FROM tasks WHERE id = ?", [id]);
+        await db.exec("DELETE FROM tasks WHERE id = ?", [id]);
         return { message: "Tarefa deletada com sucesso." };
       } catch (error) {
         console.error(`Erro ao deletar tarefa com id ${id}:`, error);

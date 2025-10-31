@@ -16,7 +16,6 @@ import {
 } from "lucide-react-native";
 import { useEffect, useState } from "react";
 import { colors } from "../styles/colors";
-import { db } from "../libs/db";
 import { TaskListItemCard } from "./task-list-item-card";
 import { Task } from "./task";
 import { useDatabase } from "../contexts/database";
@@ -46,7 +45,7 @@ export function MainApp() {
   const [tasks, setTasks] = useState<TaskType[]>([]);
   const [task, setTask] = useState<{ id: number } | null>(null);
 
-  const { db } = useDatabase();
+  const { db, isLoading } = useDatabase();
 
   const handlePressTask = (id: number) => {
     setTask({ id });
@@ -58,12 +57,30 @@ export function MainApp() {
 
   useEffect(() => {
     (async () => {
-      console.log(db);
-      if (db) {
-        const conn = db?.execAsync("select * from tasks");
-      }
+      if (!db || isLoading) return;
+      console.log(
+        "====================================================================================="
+      );
+      await db.groups.create(`Trabalho ${Math.floor(Math.random() * 1000)}`);
+      let result = await db.groups.listAll();
+      await db.groups.update({
+        id: 1,
+        name: `Trabalho Atualizado ${Math.floor(Math.random() * 1000)}`,
+      });
+      const first = await db.groups.getById(result[0].id);
+      await db.groups.delete(result[0].id);
+      result = await db.groups.listAll();
+
+      console.log(
+        "FIRST",
+        first ? JSON.stringify(first, null, 1) : null,
+        first
+      );
+      console.log("LIST", JSON.stringify(result, null, 1));
     })();
-  }, []);
+  }, [isLoading]);
+
+  console.log({ isLoading });
 
   return (
     <View style={styles.container}>

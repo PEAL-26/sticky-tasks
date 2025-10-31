@@ -26,21 +26,21 @@ import { task } from "./tasks.js";
  */
 export async function initializeDatabase(db) {
   try {
-    db.exec(`
+    await db.exec(`
       CREATE TABLE IF NOT EXISTS groups (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT NOT NULL
       );
     `);
 
-    db.exec(`
+    await db.exec(`
       CREATE TABLE IF NOT EXISTS responsibles (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT NOT NULL
       );
     `);
 
-    db.exec(`
+    await db.exec(`
       CREATE TABLE IF NOT EXISTS tasks (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         title TEXT NOT NULL,
@@ -50,7 +50,7 @@ export async function initializeDatabase(db) {
       );
     `);
 
-    db.exec(`
+    await db.exec(`
       CREATE TABLE IF NOT EXISTS subtasks (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         task_id INTEGER NOT NULL,
@@ -69,7 +69,7 @@ export async function initializeDatabase(db) {
     `);
 
     // Triggers to update 'updated_at' timestamps
-    db.exec(`
+    await db.exec(`
       CREATE TRIGGER IF NOT EXISTS update_tasks_updated_at
       AFTER UPDATE ON tasks
       FOR EACH ROW
@@ -78,7 +78,7 @@ export async function initializeDatabase(db) {
       END;
     `);
 
-    db.exec(`
+    await db.exec(`
       CREATE TRIGGER IF NOT EXISTS update_subtasks_updated_at
       AFTER UPDATE ON subtasks
       FOR EACH ROW

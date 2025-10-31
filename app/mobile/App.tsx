@@ -1,4 +1,5 @@
 import { SQLiteProvider } from "expo-sqlite";
+
 import { MainApp } from "./components/main";
 import { DatabaseProvider } from "./contexts/database";
 import { DATABASE_NAME, migrateDb } from "./libs/db";
